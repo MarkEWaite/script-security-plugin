@@ -45,6 +45,7 @@ import org.jenkinsci.plugins.scriptsecurity.sandbox.Whitelist;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.SecureGroovyScript;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.TestGroovyRecorder;
 import org.jenkinsci.plugins.scriptsecurity.scripts.languages.GroovyLanguage;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -209,6 +210,9 @@ public class ScriptApprovalTest extends AbstractApprovalTest<ScriptApprovalTest.
                 r.assertBuildStatus(Result.FAILURE, p.scheduleBuild2(0).get()));
     }
 
+    // Ignored: This test uses external website https://www.jenkins.io which can break the test if the site is down
+    // TODO: fix this test to not depend on external websites
+    @Ignore
     @Test
     public void forceSandboxTests() throws Exception {
         setBasicSecurity();
