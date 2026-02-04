@@ -219,7 +219,7 @@ public class ScriptApprovalTest extends AbstractApprovalTest<ScriptApprovalTest.
     public void forceSandboxTests() throws Exception {
         setBasicSecurity();
 
-        HttpServer mockJarServer = createMockJarHttpServer();
+        HttpServer mockJarServer = createAndStartMockJarHttpServer();
         String mockJarUrl = "http:/" + mockJarServer.getAddress() + "/library.jar";
 
         try {
@@ -296,7 +296,7 @@ public class ScriptApprovalTest extends AbstractApprovalTest<ScriptApprovalTest.
      * as the JAR content. This is useful for tests that require a remote JAR resource.
      * </p>
      */
-    private static @NotNull HttpServer createMockJarHttpServer() throws IOException {
+    private static @NotNull HttpServer createAndStartMockJarHttpServer() throws IOException {
         HttpServer mockServer = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
         mockServer.createContext("/library.jar", exchange -> {
             byte[] responseBytes = "Mock JAR content".getBytes(StandardCharsets.UTF_8);
