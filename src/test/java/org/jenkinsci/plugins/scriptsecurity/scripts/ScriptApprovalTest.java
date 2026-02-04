@@ -45,7 +45,7 @@ import org.jenkinsci.plugins.scriptsecurity.sandbox.Whitelist;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.SecureGroovyScript;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.groovy.TestGroovyRecorder;
 import org.jenkinsci.plugins.scriptsecurity.scripts.languages.GroovyLanguage;
-import org.jetbrains.annotations.NotNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
@@ -133,19 +133,26 @@ public class ScriptApprovalTest extends AbstractApprovalTest<ScriptApprovalTest.
 
     @Issue("SECURITY-1866")
     @Test public void classpathEntriesEscaped() throws Exception {
-        // Add pending classpath entry.
-        final UnapprovedClasspathException e = assertThrows(UnapprovedClasspathException.class, () ->
-            ScriptApproval.get().using(new ClasspathEntry("https://www.example.com/#value=Hack<img id='xss' src=x onerror=alert(123)>Hack")));
+        HttpServer mockJarServer = createAndStartMockJarHttpServer();
+        String mockJarUrl = "http:/" + mockJarServer.getAddress() + "/library.jar#value=Hack<img id='xss' src=x onerror=alert(123)>Hack";
 
-        // Check for XSS in pending approvals.
-        JenkinsRule.WebClient wc = r.createWebClient();
-        HtmlPage approvalPage = wc.goTo("scriptApproval");
-        assertThat(approvalPage.getElementById("xss"), nullValue());
-        // Approve classpath entry.
-        ScriptApproval.get().approveClasspathEntry(e.getHash());
-        // Check for XSS in approved classpath entries.
-        HtmlPage approvedPage = wc.goTo("scriptApproval");
-        assertThat(approvedPage.getElementById("xss"), nullValue());
+        try {
+            // Add pending classpath entry.
+            final UnapprovedClasspathException e = assertThrows(UnapprovedClasspathException.class, () ->
+                    ScriptApproval.get().using(new ClasspathEntry(mockJarUrl)));
+
+            // Check for XSS in pending approvals.
+            JenkinsRule.WebClient wc = r.createWebClient();
+            HtmlPage approvalPage = wc.goTo("scriptApproval");
+            assertThat(approvalPage.getElementById("xss"), nullValue());
+            // Approve classpath entry.
+            ScriptApproval.get().approveClasspathEntry(e.getHash());
+            // Check for XSS in approved classpath entries.
+            HtmlPage approvedPage = wc.goTo("scriptApproval");
+            assertThat(approvedPage.getElementById("xss"), nullValue());
+        }finally {
+            mockJarServer.stop(0);
+        }
     }
 
     @Test public void clearMethodsLifeCycle() throws Exception {
@@ -296,7 +303,7 @@ public class ScriptApprovalTest extends AbstractApprovalTest<ScriptApprovalTest.
      * as the JAR content. This is useful for tests that require a remote JAR resource.
      * </p>
      */
-    private static @NotNull HttpServer createAndStartMockJarHttpServer() throws IOException {
+    private static @NonNull HttpServer createAndStartMockJarHttpServer() throws IOException {
         HttpServer mockServer = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
         mockServer.createContext("/library.jar", exchange -> {
             byte[] responseBytes = "Mock JAR content".getBytes(StandardCharsets.UTF_8);
