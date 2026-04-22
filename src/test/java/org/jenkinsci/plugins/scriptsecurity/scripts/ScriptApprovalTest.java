@@ -464,6 +464,25 @@ public class ScriptApprovalTest extends AbstractApprovalTest<ScriptApprovalTest.
         r.jenkins.setAuthorizationStrategy(mockStrategy);
     }
 
+    @Issue("SECURITY-3662")
+    @Test
+    public void getClasspathRenderInfoRequiresAdmin() {
+        r.jenkins.setSecurityRealm(r.createDummySecurityRealm());
+        r.jenkins.setAuthorizationStrategy(new MockAuthorizationStrategy().
+                grant(Jenkins.ADMINISTER).everywhere().to("admin").
+                grant(Jenkins.READ).everywhere().to("read"));
+
+        // admin can call getClasspathRenderInfo
+        try (ACLContext ctx = ACL.as(User.getById("admin", true))) {
+            ScriptApproval.get().getClasspathRenderInfo();
+        }
+
+        // user cannot call getClasspathRenderInfo
+        try (ACLContext ctx = ACL.as(User.getById("read", true))) {
+            assertThrows(Exception.class, () -> ScriptApproval.get().getClasspathRenderInfo());
+        }
+    }
+
     private Script script(String groovy) {
         return new Script(groovy);
     }

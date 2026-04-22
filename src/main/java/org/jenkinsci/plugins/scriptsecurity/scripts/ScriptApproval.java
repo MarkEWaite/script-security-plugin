@@ -1273,6 +1273,7 @@ public final class ScriptApproval extends GlobalConfiguration implements RootAct
     @Restricted(NoExternalUse.class) // for use from Ajax
     @JavaScriptMethod
     public JSON getClasspathRenderInfo() {
+        Jenkins.get().checkPermission(Jenkins.ADMINISTER);
         JSONArray pendings = new JSONArray();
         for (PendingClasspathEntry cp : getPendingClasspathEntries()) {
             pendings.add(new JSONObject().element("hash", cp.getHash()).element("path", ClasspathEntry.urlToPath(cp.getURL())));
